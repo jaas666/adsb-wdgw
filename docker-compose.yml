@@ -1,0 +1,52 @@
+---
+# adsb-to-wdgwars — WDGoWars feeder sidecar for ultra feeder
+#
+# Add this to your existing ultra feeder compose stack, or run standalone
+# with: docker compose up -d
+#
+# The ultra feeder exposes aircraft.json via its built-in web server.
+# Common paths (pick whichever matches your setup):
+#   http://ultrafeeder/data/aircraft.json           ← sdr-enthusiasts image
+#   http://ultrafeeder/tar1090/data/aircraft.json   ← tar1090 skin
+#   http://ultrafeeder/skyaware/data/aircraft.json  ← piaware skin
+
+services:
+  adsb-wdgwars:
+    image: ghcr.io/jaas666/adsb-wdgw:latest
+    container_name: adsb-wdgwars
+    restart: unless-stopped
+
+    environment:
+      # URL to your ultra feeder's aircraft.json endpoint
+      # If ultra feeder is on the same Docker network, use its service name.
+      # If it's on the host, use host.docker.internal (or the host IP).
+      WDGWARS_ULTRA_FEEDER_URL: "http://ultrafeeder/data/aircraft.json"
+
+      # How often (in seconds) to poll and upload
+      WDGWARS_POLL_INTERVAL: "30"
+
+      # Your WDGoWars API key — use a .env file to keep this out of compose
+      WDGWARS_API_KEY: "${WDGWARS_API_KEY}"
+
+      # Optional: spoof station location (all four must be set to take effect)
+      # WDGWARS_STATION_LAT: "52.2297"
+      # WDGWARS_STATION_LON: "21.0122"
+      # WDGWARS_FAKE_LAT: "48.8566"
+      # WDGWARS_FAKE_LON: "2.3522"
+
+    # If ultra feeder is in the same compose stack, attach to its network:
+    networks:
+      - adsb-net
+
+    # Optional: limit resource usage
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+networks:
+  adsb-net:
+    # If your ultra feeder already defines this network, set external: true
+    # and use the correct network name:
+    # external: true
+    # name: ultrafeeder_default
